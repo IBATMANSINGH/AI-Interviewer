@@ -24,7 +24,9 @@ export const generateQuestion = async (topic, questionNumber, previousQuestionsA
     const response = await openRouterApi.post('', {
       model: 'meta-llama/llama-4-maverick:free',
       messages: [
-        { role: 'system', content: `You are an expert interviewer for ${topic}. Ask challenging but fair questions. This is question number ${questionNumber} of a short 3-question interview. Make each question count and cover different aspects of ${topic}.` },
+        { role: 'system', content: `You are an expert interviewer for ${topic}. Ask challenging but fair questions. This is question number ${questionNumber} of a short 3-question interview. Make each question count and cover different aspects of ${topic}.
+
+The questions should be specific enough that it would be obvious if a candidate gives an unrelated or generic answer. Design questions that test actual knowledge of ${topic} rather than allowing for generic responses.` },
         ...previousQuestionsAnswers.map(qa => [
           { role: 'assistant', content: qa.question },
           { role: 'user', content: qa.answer }
@@ -86,7 +88,17 @@ export const evaluateAnswer = async (topic, question, answer) => {
     const response = await openRouterApi.post('', {
       model: 'meta-llama/llama-4-maverick:free',
       messages: [
-        { role: 'system', content: `You are an expert evaluator for ${topic} interviews. Evaluate the candidate's answer fairly and provide constructive feedback.` },
+        { role: 'system', content: `You are an expert evaluator for ${topic} interviews. Evaluate the candidate's answer fairly and provide constructive feedback.
+
+IMPORTANT SCORING GUIDELINES:
+- Score from 1-10 where 10 is excellent
+- Give scores of 1-2 for answers that are completely unrelated to the question or topic
+- Give scores of 3-4 for answers that are somewhat related but miss the main point
+- Give scores of 5-6 for average answers that address the question but lack depth
+- Give scores of 7-8 for good answers with solid understanding
+- Give scores of 9-10 for excellent answers with comprehensive understanding
+
+If the answer is completely off-topic or unrelated to the question, you MUST give a very low score (1-2) and clearly explain why in the feedback.` },
         { role: 'user', content: `Question: ${question}\n\nCandidate's Answer: ${answer}` }
       ],
       response_format: {
@@ -99,25 +111,25 @@ export const evaluateAnswer = async (topic, question, answer) => {
             properties: {
               score: {
                 type: 'number',
-                description: 'Score from 1-10 where 10 is excellent'
+                description: 'Score from 1-10 where 10 is excellent. Give scores of 1-2 for completely unrelated answers.'
               },
               feedback: {
                 type: 'string',
-                description: 'Constructive feedback on the answer'
+                description: 'Constructive feedback on the answer. If the answer is unrelated, clearly state this fact.'
               },
               strengths: {
                 type: 'array',
                 items: {
                   type: 'string'
                 },
-                description: 'Key strengths of the answer'
+                description: 'Key strengths of the answer. For completely unrelated answers, this may be empty or minimal.'
               },
               areas_for_improvement: {
                 type: 'array',
                 items: {
                   type: 'string'
                 },
-                description: 'Areas where the answer could be improved'
+                description: 'Areas where the answer could be improved. For unrelated answers, include "Answer is unrelated to the question" as the first item.'
               }
             },
             required: ['score', 'feedback', 'strengths', 'areas_for_improvement'],
@@ -137,10 +149,10 @@ export const evaluateAnswer = async (topic, question, answer) => {
       // If it's not valid JSON, create a structured object from the text
       console.log('Response is not in JSON format, creating structured object:', content);
       return {
-        score: 5, // Default middle score
+        score: 2, // Default low score for parsing errors
         feedback: content,
-        strengths: ['Response format issue - please retry'],
-        areas_for_improvement: ['Response format issue - please retry']
+        strengths: ['Unable to identify strengths due to response format issue'],
+        areas_for_improvement: ['Answer may be unrelated to the question', 'Response format issue - please retry']
       };
     }
   } catch (error) {
@@ -165,7 +177,18 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
     const response = await openRouterApi.post('', {
       model: 'meta-llama/llama-4-maverick:free',
       messages: [
-        { role: 'system', content: `You are an expert interviewer for ${topic}. Provide a comprehensive evaluation of the candidate's performance in this short interview of 3 questions. Even though this is a brief assessment, try to provide meaningful insights.` },
+        { role: 'system', content: `You are an expert interviewer for ${topic}. Provide a comprehensive evaluation of the candidate's performance in this short interview of 3 questions. Even though this is a brief assessment, try to provide meaningful insights.
+
+IMPORTANT SCORING GUIDELINES:
+- Overall score should be from 1-100 where 100 is excellent
+- If ANY answers were completely unrelated to the questions, the overall score should not exceed 30
+- If MOST answers were unrelated or off-topic, the overall score should be below 20
+- Weight the relevance of answers heavily in your scoring
+- Be strict but fair in your assessment
+- For completely irrelevant or nonsensical answers, recommend 'Reject'
+- Only recommend 'Hire' for candidates who demonstrate clear understanding of the topic
+
+Your evaluation must accurately reflect the candidate's actual knowledge of ${topic}.` },
         { role: 'user', content: `Interview Summary:\n\n${interviewSummary}` }
       ],
       response_format: {
@@ -178,7 +201,7 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
             properties: {
               overall_score: {
                 type: 'number',
-                description: 'Overall score from 1-100 where 100 is excellent'
+                description: 'Overall score from 1-100 where 100 is excellent. If answers were unrelated to questions, score should not exceed 30.'
               },
               summary: {
                 type: 'string',
@@ -200,7 +223,7 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
               },
               recommendation: {
                 type: 'string',
-                description: 'Overall recommendation (e.g., "Hire", "Consider", "Reject")'
+                description: 'Overall recommendation (e.g., "Hire", "Consider", "Reject"). Use "Reject" for candidates with mostly unrelated answers.'
               }
             },
             required: ['overall_score', 'summary', 'key_strengths', 'areas_for_improvement', 'recommendation'],
@@ -220,11 +243,11 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
       // If it's not valid JSON, create a structured object from the text
       console.log('Response is not in JSON format, creating structured object:', content);
       return {
-        overall_score: 50, // Default middle score
+        overall_score: 15, // Default low score for parsing errors
         summary: content,
-        key_strengths: ['Response format issue - please retry'],
-        areas_for_improvement: ['Response format issue - please retry'],
-        recommendation: 'Consider'
+        key_strengths: ['Unable to identify strengths due to response format issue'],
+        areas_for_improvement: ['Answers may be unrelated to the questions', 'Response format issue - please retry'],
+        recommendation: 'Reject'
       };
     }
   } catch (error) {
