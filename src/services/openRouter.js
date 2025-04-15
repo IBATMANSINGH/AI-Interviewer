@@ -24,7 +24,7 @@ export const generateQuestion = async (topic, questionNumber, previousQuestionsA
     const response = await openRouterApi.post('', {
       model: 'meta-llama/llama-4-maverick:free',
       messages: [
-        { role: 'system', content: `You are an expert interviewer for ${topic}. Ask challenging but fair questions. This is question number ${questionNumber} of the interview.` },
+        { role: 'system', content: `You are an expert interviewer for ${topic}. Ask challenging but fair questions. This is question number ${questionNumber} of a short 3-question interview. Make each question count and cover different aspects of ${topic}.` },
         ...previousQuestionsAnswers.map(qa => [
           { role: 'assistant', content: qa.question },
           { role: 'user', content: qa.answer }
@@ -165,7 +165,7 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
     const response = await openRouterApi.post('', {
       model: 'meta-llama/llama-4-maverick:free',
       messages: [
-        { role: 'system', content: `You are an expert interviewer for ${topic}. Provide a comprehensive evaluation of the candidate's performance in the interview.` },
+        { role: 'system', content: `You are an expert interviewer for ${topic}. Provide a comprehensive evaluation of the candidate's performance in this short interview of 3 questions. Even though this is a brief assessment, try to provide meaningful insights.` },
         { role: 'user', content: `Interview Summary:\n\n${interviewSummary}` }
       ],
       response_format: {
