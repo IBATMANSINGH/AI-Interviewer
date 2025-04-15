@@ -53,8 +53,21 @@ export const generateQuestion = async (topic, questionNumber, previousQuestionsA
         }
       }
     });
-    
-    return response.data.choices[0].message.content;
+
+    const content = response.data.choices[0].message.content;
+
+    // Check if the response is JSON or plain text
+    try {
+      // Try to parse as JSON first
+      return typeof content === 'string' ? JSON.parse(content) : content;
+    } catch (parseError) {
+      // If it's not valid JSON, create a structured object from the text
+      console.log('Response is not in JSON format, creating structured object:', content);
+      return {
+        question: content.replace(/^Here's your first question:\s*\n\n\*\*Question \d+:\*\*\s*/i, ''),
+        context: 'Generated from unstructured response'
+      };
+    }
   } catch (error) {
     console.error('Error generating question:', error);
     throw error;
@@ -113,8 +126,23 @@ export const evaluateAnswer = async (topic, question, answer) => {
         }
       }
     });
-    
-    return response.data.choices[0].message.content;
+
+    const content = response.data.choices[0].message.content;
+
+    // Check if the response is JSON or plain text
+    try {
+      // Try to parse as JSON first
+      return typeof content === 'string' ? JSON.parse(content) : content;
+    } catch (parseError) {
+      // If it's not valid JSON, create a structured object from the text
+      console.log('Response is not in JSON format, creating structured object:', content);
+      return {
+        score: 5, // Default middle score
+        feedback: content,
+        strengths: ['Response format issue - please retry'],
+        areas_for_improvement: ['Response format issue - please retry']
+      };
+    }
   } catch (error) {
     console.error('Error evaluating answer:', error);
     throw error;
@@ -181,8 +209,24 @@ export const generateFinalEvaluation = async (topic, questionsAnswers, evaluatio
         }
       }
     });
-    
-    return response.data.choices[0].message.content;
+
+    const content = response.data.choices[0].message.content;
+
+    // Check if the response is JSON or plain text
+    try {
+      // Try to parse as JSON first
+      return typeof content === 'string' ? JSON.parse(content) : content;
+    } catch (parseError) {
+      // If it's not valid JSON, create a structured object from the text
+      console.log('Response is not in JSON format, creating structured object:', content);
+      return {
+        overall_score: 50, // Default middle score
+        summary: content,
+        key_strengths: ['Response format issue - please retry'],
+        areas_for_improvement: ['Response format issue - please retry'],
+        recommendation: 'Consider'
+      };
+    }
   } catch (error) {
     console.error('Error generating final evaluation:', error);
     throw error;
