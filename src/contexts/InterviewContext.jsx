@@ -3,6 +3,12 @@ import { createContext, useContext, useState } from 'react';
 // Create the context
 const InterviewContext = createContext();
 
+// Interview modes
+export const INTERVIEW_MODES = {
+  TEXT: 'text',
+  VOICE: 'voice'
+};
+
 // Custom hook to use the interview context
 export const useInterview = () => {
   const context = useContext(InterviewContext);
@@ -24,10 +30,12 @@ export const InterviewProvider = ({ children }) => {
   const [finalEvaluation, setFinalEvaluation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [interviewMode, setInterviewMode] = useState(INTERVIEW_MODES.TEXT);
 
   // Start a new interview
-  const startInterview = (selectedTopic) => {
+  const startInterview = (selectedTopic, mode = INTERVIEW_MODES.TEXT) => {
     setTopic(selectedTopic);
+    setInterviewMode(mode);
     setIsInterviewStarted(true);
     setIsInterviewCompleted(false);
     setCurrentQuestionNumber(1);
@@ -64,6 +72,7 @@ export const InterviewProvider = ({ children }) => {
     setEvaluations([]);
     setFinalEvaluation(null);
     setError(null);
+    setInterviewMode(INTERVIEW_MODES.TEXT);
   };
 
   // Value object to be provided to consumers
@@ -77,6 +86,7 @@ export const InterviewProvider = ({ children }) => {
     finalEvaluation,
     isLoading,
     error,
+    interviewMode,
     startInterview,
     addQuestionAnswer,
     addEvaluation,
@@ -84,7 +94,8 @@ export const InterviewProvider = ({ children }) => {
     resetInterview,
     setIsLoading,
     setError,
-    setCurrentQuestionNumber
+    setCurrentQuestionNumber,
+    setInterviewMode
   };
 
   return (

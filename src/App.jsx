@@ -4,6 +4,7 @@ import { InterviewProvider } from './contexts/InterviewContext';
 import Header from './components/common/Header';
 import Home from './pages/Home';
 import Interview from './pages/Interview';
+import VoiceInterview from './pages/VoiceInterview';
 import Results from './pages/Results';
 import './App.css';
 
@@ -32,6 +33,7 @@ function App() {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/interview" element={<Interview />} />
+            <Route path="/voice-interview" element={<VoiceInterview />} />
             <Route path="/results" element={<Results />} />
           </Routes>
         </Router>
