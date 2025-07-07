@@ -72,6 +72,25 @@ yarn dev
 5. Continue until all 10 questions are completed
 6. Review your final evaluation and score
 
+---
+
+### 🤖 AI-Assisted Development Process
+
+This project was built using a "prompt-first" approach, where I leveraged an LLM as a coding co-pilot to translate a concept into a functional application.
+
+*   **The Core Prompt:** I began by architecting the project with a high-level prompt to generate the foundational structure:
+    > *"Create a Python application using Streamlit that simulates a job interview. The app should take a job role as input, generate relevant interview questions using an LLM, and then capture the user's answers. It should also provide feedback on the answers."*
+
+*   **Iteration and Refinement:** The AI generated the basic UI. I then used follow-up prompts to build the core logic:
+    *   "Write a function that uses Google's Gemini Pro API to generate 5 interview questions based on a given job role."
+    *   "Implement a text-to-speech function using `gTTS` to have the AI ask the questions out loud."
+    *   "Create a feedback loop where, after a user provides an answer, the Gemini API is called again with a prompt to evaluate the answer's quality."
+
+*   **My Role as the Developer:** My primary role was not just to code, but to act as the architect. This involved designing the prompts (for both question generation and answer evaluation), critically evaluating and debugging the AI-generated code, integrating the different API calls into a cohesive conversational flow, and testing the final application for a realistic interview experience.
+
 ## License
 
 This project is licensed under the MIT License - see the LICENSE file for details.
+
+## Author
+Made With Vibes & ❤️ By Ankit Singh
